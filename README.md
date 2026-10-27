@@ -1,6 +1,6 @@
 # GML
 
-GML is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, signal, and rate limiting utilities.
+GML is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, signal, remote, cleanup, state, pooling, timer, attribute, random, and tween utilities.
 
 ## Layout
 
@@ -122,6 +122,74 @@ end)
 `BindEvent(remote, handler, rejected?)` drops calls over the limit and optionally calls `rejected(player, retryAfter)`. Other `OnServerEvent` listeners on that remote still run, so put the protected action inside the bound handler. `BindFunction(remote, handler)` returns `nil, retryAfter` to the invoking client when blocked. It assigns `OnServerInvoke`, replacing any handler previously assigned outside GML; do not assign another handler while the binding is active. Both methods return a binding with `:Disconnect()` to remove the remote handler and player cleanup listener. Use a separate limiter instance for each remote if each action should have its own budget.
 
 `New(capacity, windowSeconds)` requires a positive integer capacity and a positive window in seconds. The bucket permits an initial burst up to capacity and refills evenly over the window. The lower-level `Allow(key, cost)` method returns `allowed`, `retryAfter`, and the remaining token balance. `Remaining(key)`, `Reset(key)`, and `ResetAll()` are also available. Keys can be strings or numbers; omit the key for one shared bucket. A custom clock function can be passed as the third `New` argument for deterministic tests. Validate remote arguments and permissions inside each handler.
+
+### More modules
+
+| Module | Main API | Use |
+| --- | --- | --- |
+| `RemoteGuard` | `String`, `Number`, `Boolean`, `Instance`, `Optional`, `Check`, `Wrap` | Validate remote arguments and apply a permission callback before a handler |
+| `Cleanup` | `New`, `Add`, `Remove`, `Clean`, `Destroy` | Collect connections, instances, tasks, functions, and objects with cleanup methods |
+| `StateMachine` | `New`, `CanTransition`, `Transition`, `Changed`, `Destroy` | Allow only configured state changes |
+| `ObjectPool` | `New`, `Acquire`, `Release`, `Destroy` | Reuse objects and cap how many idle objects are kept |
+| `Timer` | `New`, `Start`, `Remaining`, `Stop`, `Destroy` | Run one-shot or repeating cancellable delays |
+| `AttributeObserver` | `New`, `Watch`, `Destroy` | Receive new and previous attribute values |
+| `WeightedRandom` | `New`, `Add`, `Roll`, `Clear` | Select an entry according to its weight |
+| `Tween` | `New`, `Play`, `Cancel`, `CancelAll`, `Destroy` | Play one managed tween per target and cancel it cleanly |
+
+```luau
+local GML = require(game:GetService("ReplicatedStorage").Modules.Library.GML)
+
+local GuardedHandler = GML.RemoteGuard.Wrap({ GML.RemoteGuard.String(1, 32) }, function(Player, ItemId)
+	print(Player.Name, ItemId)
+end, function(Player, ItemId)
+	return Player.UserId > 0
+end)
+local PurchaseRemote = game:GetService("ReplicatedStorage").Remotes.Purchase
+local PurchaseBinding = GML.RateLimiter.New(5, 10):BindEvent(PurchaseRemote, GuardedHandler)
+
+local Bag = GML.Cleanup.New()
+Bag:Add(workspace.ChildAdded:Connect(function(Child)
+	print(Child.Name)
+end))
+
+local Flow = GML.StateMachine.New("Lobby", {
+	Lobby = { "Playing" },
+	Playing = { "Lobby" },
+})
+Flow:Transition("Playing")
+
+local Pool = GML.ObjectPool.New(function()
+	return Instance.new("Part")
+end, function(Part)
+	Part.Parent = nil
+end, 20)
+local Part = Pool:Acquire()
+Pool:Release(Part)
+
+local Countdown = GML.Timer.New(5, function()
+	print("Done")
+end)
+Countdown:Start()
+
+local Observer = GML.AttributeObserver.New(workspace)
+Observer:Watch("Round", function(Current, Previous)
+	print(Current, Previous)
+end, true)
+
+local Loot = GML.WeightedRandom.New()
+Loot:Add("Common", 80):Add("Rare", 20)
+print(Loot:Roll())
+```
+
+For a LocalScript next to a `Frame`:
+
+```luau
+local GML = require(game:GetService("ReplicatedStorage").Modules.Library.GML)
+local Tweens = GML.Tween.New()
+Tweens:Play(script.Parent:WaitForChild("Frame"), TweenInfo.new(0.25), { BackgroundTransparency = 0 })
+```
+
+`RemoteGuard.Wrap` returns `nil, "Invalid arguments"` when input fails validation and `nil, "Not allowed"` when its optional permission callback returns false. Pass the wrapped handler to `RateLimiter:BindEvent` or `:BindFunction` to combine the checks. `ObjectPool.New` accepts create, reset, maximum idle count, and dispose callbacks in that order. Call `Destroy` on cleanup, observer, timer, tween, pool, and state machine objects when their owner is finished with them.
 
 `Number.Abbreviate` uses `K`, `M`, `B`, `T`, `Qa`, `Qi`, `Sx`, `Sp`, `Oc`, `No`, and `Dc`. `Number.ParseAbbreviated` accepts these exact suffixes and returns `nil` for invalid input. Decimal places for `Abbreviate` and `Commas` are limited to 0–6. `Time.FormatTimestamp` accepts Roblox `DateTime` format patterns and uses UTC unless the third argument is `true`. `Time.Relative` uses approximate 30-day months and 365-day years. `Signal:Wait()` yields until the next fire and returns its arguments; destroying the signal resumes waiters with no values.
 

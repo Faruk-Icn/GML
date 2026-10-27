@@ -9,6 +9,14 @@ GML.Math = require(script.Math)
 GML.Table = require(script.Table)
 GML.Signal = require(script.Signal)
 GML.RateLimiter = require(script.RateLimiter)
+GML.RemoteGuard = require(script.RemoteGuard)
+GML.Cleanup = require(script.Cleanup)
+GML.StateMachine = require(script.StateMachine)
+GML.ObjectPool = require(script.ObjectPool)
+GML.Timer = require(script.Timer)
+GML.AttributeObserver = require(script.AttributeObserver)
+GML.WeightedRandom = require(script.WeightedRandom)
+GML.Tween = require(script.Tween)
 
 export type LoaderOptions = { IncludeDescendants: boolean?, Debug: boolean? }
 export type ModuleRecord = { Identifier: string, Name: string, Priority: number, Value: any }
