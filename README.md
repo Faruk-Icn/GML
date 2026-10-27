@@ -1,0 +1,104 @@
+# GML
+
+GML is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, and signal utilities.
+
+## Layout
+
+| Roblox location | Purpose |
+| --- | --- |
+| `ReplicatedStorage.Modules.Library.GML` | Main ModuleScript and its utility ModuleScript children |
+| `ReplicatedStorage.Modules.Client` | Client modules loaded by the client script |
+| `ServerStorage.Modules.Client` | Server modules loaded by the server script |
+| `StarterPlayer.StarterPlayerScripts.GMLClient` | The single client bootstrap script |
+| `ServerScriptService.GMLServer` | The single server bootstrap script |
+
+The server folder is named `Client` to match the requested path. Its contents run only on the server because they live in `ServerStorage`.
+
+## Install
+
+Clone this repository and sync `default.project.json` with [Rojo](https://rojo.space/). The project file creates the folders and places the two bootstrap scripts automatically. You can also copy the files into Roblox Studio by hand using the layout above. When copying by hand, make `src/GML/init.luau` the source of the `GML` ModuleScript and put the other files in `src/GML` beneath it as ModuleScript children.
+
+Place your client ModuleScripts under `ReplicatedStorage.Modules.Client` and your server ModuleScripts under `ServerStorage.Modules.Client`. Both bootstrap scripts search descendants, so nested folders are supported. Each bootstrap runs once per client or server session.
+
+## Lifecycle modules
+
+```luau
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GML = require(ReplicatedStorage.Modules.Library.GML)
+
+local Coins = { Priority = 10 }
+
+function Coins:Init()
+	self.Amount = 0
+	self.Changed = GML.Signal.New()
+end
+
+function Coins:Start()
+	self.Amount += 1000
+	self.Changed:Fire(self.Amount)
+	print(GML.Number.Abbreviate(self.Amount))
+end
+
+return Coins
+```
+
+Put this ModuleScript in either module folder. Lower `Priority` values run first; the default is `100`. GML requires all modules, calls every `Init` in priority order, then calls every `Start` in priority order. Equal priorities are ordered by full Roblox path. Errors are written with `warn` and stored in `Loader.Errors`; other modules continue loading. Loading the same ModuleScript again with the same loader skips it.
+
+To use a loader manually:
+
+```luau
+local GML = require(game:GetService("ReplicatedStorage").Modules.Library.GML)
+local Loader = GML.New("Extra")
+Loader:LoadModules(workspace.ExtraModules, { IncludeDescendants = true, Debug = true })
+
+local Coins = Loader:GetModuleByName("Coins")
+local Exact = Loader:GetModule(workspace.ExtraModules.Coins:GetFullName())
+print(Loader.IsLoaded, #Loader.Errors, Coins, Exact)
+```
+
+`GetModuleByName` returns the first matching name. Use `GetModule` with a full path when names repeat.
+
+## Utilities
+
+All utility modules are children of `GML` and are available directly from the main module.
+
+```luau
+local GML = require(game:GetService("ReplicatedStorage").Modules.Library.GML)
+
+print(GML.Number.Abbreviate(1250000))
+print(GML.Number.Abbreviate(1250000, 2))
+print(GML.Number.ParseAbbreviated("1.25M"))
+print(GML.Number.Commas(1250000))
+
+local Timestamp = GML.Time.FromUTC(2026, 10, 27, 12, 30)
+print(GML.Time.FormatTimestamp(Timestamp))
+print(GML.Time.FormatTimestamp(Timestamp, "YYYY-MM-DD", true))
+print(GML.Time.Relative(Timestamp))
+print(GML.Time.FormatDuration(3672))
+
+print(GML.Math.Round(3.14159, 2))
+print(GML.Math.Map(50, 0, 100, 0, 1))
+print(GML.Math.Lerp(0, 10, 0.25))
+print(GML.Math.Clamp01(1.5))
+
+local Copy = GML.Table.DeepCopy({ Stats = { Coins = 10 } })
+local Combined = GML.Table.Merge(Copy, { Stats = { Level = 2 } })
+print(GML.Table.Count(Combined.Stats))
+
+local Changed = GML.Signal.New()
+local Connection = Changed:Connect(function(Value)
+	print(Value)
+end)
+Changed:Once(function(Value)
+	print("First change:", Value)
+end)
+Changed:Fire(10)
+Connection:Disconnect()
+Changed:Destroy()
+```
+
+`Number.Abbreviate` uses `K`, `M`, `B`, `T`, `Qa`, `Qi`, `Sx`, `Sp`, `Oc`, `No`, and `Dc`. `Number.ParseAbbreviated` accepts these exact suffixes and returns `nil` for invalid input. Decimal places for `Abbreviate` and `Commas` are limited to 0–6. `Time.FormatTimestamp` accepts Roblox `DateTime` format patterns and uses UTC unless the third argument is `true`. `Time.Relative` uses approximate 30-day months and 365-day years. `Signal:Wait()` yields until the next fire and returns its arguments; destroying the signal resumes waiters with no values.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

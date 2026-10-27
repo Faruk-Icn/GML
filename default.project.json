@@ -1,0 +1,45 @@
+{
+  "name": "GML",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Modules": {
+        "$className": "Folder",
+        "Library": {
+          "$className": "Folder",
+          "GML": {
+            "$path": "src/GML"
+          }
+        },
+        "Client": {
+          "$className": "Folder"
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Modules": {
+        "$className": "Folder",
+        "Client": {
+          "$className": "Folder"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "GMLClient": {
+          "$path": "src/client/GMLClient.client.luau"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "GMLServer": {
+        "$path": "src/server/GMLServer.server.luau"
+      }
+    }
+  }
+}
