@@ -99,24 +99,29 @@ Changed:Destroy()
 
 ### Rate limiting
 
-`GML.RateLimiter` uses a token bucket. It allows an initial burst up to its capacity, then refills that capacity evenly over the window. Each string or number key has an independent bucket. Use it on the server for authoritative limits on client requests.
+`GML.RateLimiter` can bind directly to a `RemoteEvent`, `UnreliableRemoteEvent`, or `RemoteFunction` on the server. It gives each player an independent token bucket, checks the limit before calling your handler, and clears that player's bucket when they leave. Create your remotes under `ReplicatedStorage.Remotes`, then bind them from a server ModuleScript or Script.
 
 ```luau
-local GML = require(game:GetService("ReplicatedStorage").Modules.Library.GML)
-local Limiter = GML.RateLimiter.New(5, 10)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GML = require(ReplicatedStorage.Modules.Library.GML)
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 
-local UserId = 12345
-local Allowed, RetryAfter, TokensLeft = Limiter:Allow(UserId)
-if not Allowed then
-	warn("Try again in", RetryAfter, "seconds")
-end
+local PurchaseLimit = GML.RateLimiter.New(5, 10)
+local PurchaseBinding = PurchaseLimit:BindEvent(Remotes:WaitForChild("Purchase"), function(Player, ItemId)
+	print(Player.Name, ItemId)
+end, function(Player, RetryAfter)
+	warn(Player.Name, "can retry in", RetryAfter, "seconds")
+end)
 
-game:GetService("Players").PlayerRemoving:Connect(function(Player)
-	Limiter:Reset(Player.UserId)
+local QuoteLimit = GML.RateLimiter.New(2, 5)
+local QuoteBinding = QuoteLimit:BindFunction(Remotes:WaitForChild("GetQuote"), function(Player, ItemId)
+	return { ItemId = ItemId, Price = 100 }
 end)
 ```
 
-`New(capacity, windowSeconds)` requires a positive integer capacity and a positive window in seconds. `Allow(key, cost)` defaults to a cost of one token and returns `allowed`, `retryAfter` in seconds, and the remaining token balance. The key is optional for a single shared bucket. `Remaining(key)` returns the current balance without spending tokens. `Reset(key)` clears one bucket; `ResetAll()` clears every bucket. A custom clock function can be passed as the third `New` argument for deterministic tests. Keep one limiter instance per action, and reset player keys when players leave if you expect many unique keys.
+`BindEvent(remote, handler, rejected?)` drops calls over the limit and optionally calls `rejected(player, retryAfter)`. Other `OnServerEvent` listeners on that remote still run, so put the protected action inside the bound handler. `BindFunction(remote, handler)` returns `nil, retryAfter` to the invoking client when blocked. It assigns `OnServerInvoke`, replacing any handler previously assigned outside GML; do not assign another handler while the binding is active. Both methods return a binding with `:Disconnect()` to remove the remote handler and player cleanup listener. Use a separate limiter instance for each remote if each action should have its own budget.
+
+`New(capacity, windowSeconds)` requires a positive integer capacity and a positive window in seconds. The bucket permits an initial burst up to capacity and refills evenly over the window. The lower-level `Allow(key, cost)` method returns `allowed`, `retryAfter`, and the remaining token balance. `Remaining(key)`, `Reset(key)`, and `ResetAll()` are also available. Keys can be strings or numbers; omit the key for one shared bucket. A custom clock function can be passed as the third `New` argument for deterministic tests. Validate remote arguments and permissions inside each handler.
 
 `Number.Abbreviate` uses `K`, `M`, `B`, `T`, `Qa`, `Qi`, `Sx`, `Sp`, `Oc`, `No`, and `Dc`. `Number.ParseAbbreviated` accepts these exact suffixes and returns `nil` for invalid input. Decimal places for `Abbreviate` and `Commas` are limited to 0–6. `Time.FormatTimestamp` accepts Roblox `DateTime` format patterns and uses UTC unless the third argument is `true`. `Time.Relative` uses approximate 30-day months and 365-day years. `Signal:Wait()` yields until the next fire and returns its arguments; destroying the signal resumes waiters with no values.
 

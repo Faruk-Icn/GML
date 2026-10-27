@@ -2,9 +2,28 @@ local RateLimiter = {}
 RateLimiter.__index = RateLimiter
 
 local DefaultKey = {}
+local BoundFunctions = setmetatable({}, { __mode = "k" })
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local function CheckPositive(Value: number, Name: string)
 	assert(type(Value) == "number" and Value > 0 and Value < math.huge, Name .. " must be a positive finite number")
+end
+
+local function CreateBinding(Limiter, DisconnectRemote: () -> ())
+	local Leaving = Players.PlayerRemoving:Connect(function(Player)
+		Limiter:Reset(Player.UserId)
+	end)
+	local Binding = { Connected = true }
+	function Binding:Disconnect()
+		if not self.Connected then
+			return
+		end
+		self.Connected = false
+		DisconnectRemote()
+		Leaving:Disconnect()
+	end
+	return Binding
 end
 
 function RateLimiter.New(Capacity: number, WindowSeconds: number, Clock: (() -> number)?)
@@ -61,6 +80,46 @@ end
 
 function RateLimiter:ResetAll()
 	self.Buckets = {}
+end
+
+function RateLimiter:BindEvent(Remote: RemoteEvent | UnreliableRemoteEvent, Handler: (Player, ...any) -> (), Rejected: ((Player, number) -> ())?)
+	assert(RunService:IsServer(), "BindEvent can only be called on the server")
+	assert(typeof(Remote) == "Instance" and (Remote:IsA("RemoteEvent") or Remote:IsA("UnreliableRemoteEvent")), "Remote must be a RemoteEvent or UnreliableRemoteEvent")
+	assert(type(Handler) == "function", "Handler must be a function")
+	assert(Rejected == nil or type(Rejected) == "function", "Rejected must be a function")
+	local Connection = Remote.OnServerEvent:Connect(function(Player, ...)
+		local Allowed, RetryAfter = self:Allow(Player.UserId)
+		if Allowed then
+			Handler(Player, ...)
+		elseif Rejected then
+			Rejected(Player, RetryAfter)
+		end
+	end)
+	return CreateBinding(self, function()
+		Connection:Disconnect()
+	end)
+end
+
+function RateLimiter:BindFunction(Remote: RemoteFunction, Handler: (Player, ...any) -> ...any)
+	assert(RunService:IsServer(), "BindFunction can only be called on the server")
+	assert(typeof(Remote) == "Instance" and Remote:IsA("RemoteFunction"), "Remote must be a RemoteFunction")
+	assert(type(Handler) == "function", "Handler must be a function")
+	assert(BoundFunctions[Remote] == nil, "RemoteFunction is already bound by GML")
+	local function Invoke(Player, ...)
+		local Allowed, RetryAfter = self:Allow(Player.UserId)
+		if not Allowed then
+			return nil, RetryAfter
+		end
+		return Handler(Player, ...)
+	end
+	BoundFunctions[Remote] = Invoke
+	Remote.OnServerInvoke = Invoke
+	return CreateBinding(self, function()
+		if BoundFunctions[Remote] == Invoke then
+			BoundFunctions[Remote] = nil
+			Remote.OnServerInvoke = nil
+		end
+	end)
 end
 
 return RateLimiter
