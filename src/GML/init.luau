@@ -8,6 +8,7 @@ GML.Time = require(script.Time)
 GML.Math = require(script.Math)
 GML.Table = require(script.Table)
 GML.Signal = require(script.Signal)
+GML.RateLimiter = require(script.RateLimiter)
 
 export type LoaderOptions = { IncludeDescendants: boolean?, Debug: boolean? }
 export type ModuleRecord = { Identifier: string, Name: string, Priority: number, Value: any }

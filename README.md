@@ -1,6 +1,6 @@
 # GML
 
-GML is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, and signal utilities.
+GML is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, signal, and rate limiting utilities.
 
 ## Layout
 
@@ -96,6 +96,27 @@ Changed:Fire(10)
 Connection:Disconnect()
 Changed:Destroy()
 ```
+
+### Rate limiting
+
+`GML.RateLimiter` uses a token bucket. It allows an initial burst up to its capacity, then refills that capacity evenly over the window. Each string or number key has an independent bucket. Use it on the server for authoritative limits on client requests.
+
+```luau
+local GML = require(game:GetService("ReplicatedStorage").Modules.Library.GML)
+local Limiter = GML.RateLimiter.New(5, 10)
+
+local UserId = 12345
+local Allowed, RetryAfter, TokensLeft = Limiter:Allow(UserId)
+if not Allowed then
+	warn("Try again in", RetryAfter, "seconds")
+end
+
+game:GetService("Players").PlayerRemoving:Connect(function(Player)
+	Limiter:Reset(Player.UserId)
+end)
+```
+
+`New(capacity, windowSeconds)` requires a positive integer capacity and a positive window in seconds. `Allow(key, cost)` defaults to a cost of one token and returns `allowed`, `retryAfter` in seconds, and the remaining token balance. The key is optional for a single shared bucket. `Remaining(key)` returns the current balance without spending tokens. `Reset(key)` clears one bucket; `ResetAll()` clears every bucket. A custom clock function can be passed as the third `New` argument for deterministic tests. Keep one limiter instance per action, and reset player keys when players leave if you expect many unique keys.
 
 `Number.Abbreviate` uses `K`, `M`, `B`, `T`, `Qa`, `Qi`, `Sx`, `Sp`, `Oc`, `No`, and `Dc`. `Number.ParseAbbreviated` accepts these exact suffixes and returns `nil` for invalid input. Decimal places for `Abbreviate` and `Commas` are limited to 0–6. `Time.FormatTimestamp` accepts Roblox `DateTime` format patterns and uses UTC unless the third argument is `true`. `Time.Relative` uses approximate 30-day months and 365-day years. `Signal:Wait()` yields until the next fire and returns its arguments; destroying the signal resumes waiters with no values.
 
