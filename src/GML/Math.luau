@@ -2,7 +2,11 @@ local Math = {}
 
 function Math.Round(Value: number, DecimalPlaces: number?): number
 	local Factor = 10 ^ (DecimalPlaces or 0)
-	return math.floor(Value * Factor + 0.5) / Factor
+	local Scaled = Value * Factor
+	if Scaled < 0 then
+		return -math.floor(-Scaled + 0.5) / Factor
+	end
+	return math.floor(Scaled + 0.5) / Factor
 end
 
 function Math.Map(Value: number, InputMin: number, InputMax: number, OutputMin: number, OutputMax: number): number

@@ -12,7 +12,11 @@ local function Copy(Value: any, Seen: { [any]: any }): any
 	for Key, Item in pairs(Value) do
 		Result[Copy(Key, Seen)] = Copy(Item, Seen)
 	end
-	return setmetatable(Result, getmetatable(Value))
+	local Meta = getmetatable(Value)
+	if type(Meta) == "table" then
+		return setmetatable(Result, Meta)
+	end
+	return Result
 end
 
 function Table.DeepCopy(Value: any): any

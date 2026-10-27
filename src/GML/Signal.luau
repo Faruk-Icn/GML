@@ -21,11 +21,8 @@ function Signal:Connect(Callback: (...any) -> ())
 end
 
 function Signal:Once(Callback: (...any) -> ())
-	local Connection
-	Connection = self:Connect(function(...)
-		Connection:Disconnect()
-		Callback(...)
-	end)
+	local Connection = self:Connect(Callback)
+	Connection.Once = true
 	return Connection
 end
 
@@ -34,6 +31,9 @@ function Signal:Fire(...)
 	local Arguments = table.pack(...)
 	for Connection, Callback in pairs(self.Listeners) do
 		if Connection.Connected then
+			if Connection.Once then
+				Connection:Disconnect()
+			end
 			task.spawn(Callback, table.unpack(Arguments, 1, Arguments.n))
 		end
 	end
