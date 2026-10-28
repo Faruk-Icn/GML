@@ -10,7 +10,7 @@ local Units = {
 }
 
 function Time.FormatTimestamp(Timestamp: number, Format: string?, UseLocalTime: boolean?): string
-	assert(type(Timestamp) == "number", "Timestamp must be a number")
+	assert(type(Timestamp) == "number" and Timestamp > -math.huge and Timestamp < math.huge, "Timestamp must be a finite number")
 	local Date = DateTime.fromUnixTimestamp(Timestamp)
 	local Pattern = Format or "YYYY-MM-DD HH:mm:ss"
 	if UseLocalTime then
@@ -24,7 +24,7 @@ function Time.FromUTC(Year: number, Month: number, Day: number, Hour: number?, M
 end
 
 function Time.FormatDuration(Seconds: number): string
-	assert(type(Seconds) == "number" and Seconds >= 0, "Seconds must be non-negative")
+	assert(type(Seconds) == "number" and Seconds >= 0 and Seconds < math.huge, "Seconds must be a finite non-negative number")
 	local Whole = math.floor(Seconds)
 	local Hours = math.floor(Whole / 3600)
 	local Minutes = math.floor(Whole % 3600 / 60)
@@ -36,7 +36,8 @@ function Time.FormatDuration(Seconds: number): string
 end
 
 function Time.Relative(Timestamp: number, Now: number?): string
-	assert(type(Timestamp) == "number", "Timestamp must be a number")
+	assert(type(Timestamp) == "number" and Timestamp > -math.huge and Timestamp < math.huge, "Timestamp must be a finite number")
+	assert(Now == nil or (type(Now) == "number" and Now > -math.huge and Now < math.huge), "Now must be a finite number")
 	local Difference = (Now or DateTime.now().UnixTimestamp) - Timestamp
 	local Absolute = math.abs(Difference)
 	if Absolute < 1 then
