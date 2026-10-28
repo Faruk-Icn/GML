@@ -1,5 +1,9 @@
 # GML
 
+**Stars appreciated ⭐**
+
+![Starstruck achievement animation](https://githubachievements.com/cdn-cgi/image/width=1200/images/starstruck/1.gif)
+
 GML is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, signal, remote, cleanup, state, pooling, timer, attribute, random, and tween utilities.
 
 ## Layout
