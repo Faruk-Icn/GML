@@ -240,6 +240,8 @@ return Decision
 
 The tracker also exposes `SetTotalSpent(player, robux)` and `SetTotalPlaytime(player, seconds)` for games that maintain those totals, plus `:Destroy()` to disconnect its listeners. If no secret is available, the add-on warns and stays inactive. A webhook endpoint can reject or rate-limit requests, so notifications are best-effort and do not replace gameplay data or purchase records.
 
+<img width="232" height="241" alt="image" src="https://github.com/user-attachments/assets/5349f636-d97a-4f00-a9fd-e83e18b97681" />
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
