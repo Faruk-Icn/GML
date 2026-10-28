@@ -1,5 +1,5 @@
 {
-  "name": "GML",
+  "name": "GMLK",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
@@ -8,8 +8,8 @@
         "$className": "Folder",
         "Library": {
           "$className": "Folder",
-          "GML": {
-            "$path": "src/GML"
+          "GMLK": {
+            "$path": "src/GMLK"
           }
         },
         "Client": {
@@ -30,15 +30,15 @@
       "$className": "StarterPlayer",
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "GMLClient": {
-          "$path": "src/client/GMLClient.client.luau"
+        "GMLKClient": {
+          "$path": "src/client/GMLKClient.client.luau"
         }
       }
     },
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "GMLServer": {
-        "$path": "src/server/GMLServer.server.luau"
+      "GMLKServer": {
+        "$path": "src/server/GMLKServer.server.luau"
       }
     }
   }

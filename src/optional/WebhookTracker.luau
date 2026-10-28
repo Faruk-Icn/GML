@@ -6,7 +6,8 @@ local TextChatService = game:GetService("TextChatService")
 local Tracker = {}
 
 Tracker.Config = {
-	SecretName = "GML_WEBHOOK_URL",
+	SecretName = "GMLK_WEBHOOK_URL",
+	LegacySecretName = "GML_WEBHOOK_URL",
 	WebhookName = "Game Tracker",
 	WebhookAvatarUrl = "",
 	GroupId = 0,
@@ -107,7 +108,7 @@ local function Embed(Title: string, Color: number, Player: Player, Fields)
 		author = { name = SafeText(Player.DisplayName .. " (@" .. Player.Name .. ")", 256) },
 		fields = Fields,
 		timestamp = DateTime.now():ToIsoDate(),
-		footer = { text = "GML Webhook Tracker" },
+		footer = { text = "GMLK Webhook Tracker" },
 	}
 	if type(Tracker.Config.ThumbnailProvider) == "function" then
 		local Success, Url = pcall(Tracker.Config.ThumbnailProvider, Player)
@@ -135,20 +136,20 @@ local function Send(Body: string)
 		})
 		if Success and Response.Success then
 			if Tracker.Config.Debug then
-				print("[GML.WebhookTracker] Event sent")
+				print("[GMLK.WebhookTracker] Event sent")
 			end
 			return true
 		end
 		local Status = if Success and type(Response) == "table" then tonumber(Response.StatusCode) or 0 else 0
 		if Status ~= 0 and Status ~= 429 and Status < 500 then
-			warn("[GML.WebhookTracker] Request failed with status " .. tostring(Status))
+			warn("[GMLK.WebhookTracker] Request failed with status " .. tostring(Status))
 			return false
 		end
 		if Attempt < 3 then
 			task.wait(2 ^ Attempt)
 		end
 	end
-	warn("[GML.WebhookTracker] Request failed after retries")
+	warn("[GMLK.WebhookTracker] Request failed after retries")
 	return false
 end
 
@@ -157,7 +158,7 @@ local function Drain()
 		local Body = table.remove(Queue, 1)
 		local Success = pcall(Send, Body)
 		if not Success then
-			warn("[GML.WebhookTracker] Could not send event")
+			warn("[GMLK.WebhookTracker] Could not send event")
 		end
 	end
 	Draining = false
@@ -168,7 +169,7 @@ local function Enqueue(EmbedData): boolean
 		return false
 	end
 	if #Queue >= math.max(1, Tracker.Config.MaxQueue) then
-		warn("[GML.WebhookTracker] Queue full; event dropped")
+		warn("[GMLK.WebhookTracker] Queue full; event dropped")
 		return false
 	end
 	local Payload = {
@@ -181,7 +182,7 @@ local function Enqueue(EmbedData): boolean
 	end
 	local Success, Body = pcall(HttpService.JSONEncode, HttpService, Payload)
 	if not Success then
-		warn("[GML.WebhookTracker] Could not encode event")
+		warn("[GMLK.WebhookTracker] Could not encode event")
 		return false
 	end
 	table.insert(Queue, Body)
@@ -225,10 +226,13 @@ function Tracker:Init()
 		return
 	end
 	local Success, Secret = pcall(HttpService.GetSecret, HttpService, self.Config.SecretName)
+	if not Success then
+		Success, Secret = pcall(HttpService.GetSecret, HttpService, self.Config.LegacySecretName)
+	end
 	if Success then
 		WebhookUrl = Secret
 	else
-		warn("[GML.WebhookTracker] Secret unavailable; tracker disabled")
+		warn("[GMLK.WebhookTracker] Secret unavailable; tracker disabled")
 	end
 end
 
