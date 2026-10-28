@@ -208,10 +208,33 @@ Move or adapt startup modules into the appropriate client or server folder. GML 
 
 Keep existing RemoteEvent and RemoteFunction names, locations, arguments, and responses unless a change is necessary and you explain it. For server handlers that need throttling, create a limiter with GML.RateLimiter.New(...) and bind it with limiter:BindEvent(...) or limiter:BindFunction(...). Use GML.RemoteGuard for argument checks, and keep permission and game-state checks on the server. Do not leave a second unrestricted OnServerEvent listener performing the same protected action. Be careful that BindFunction assigns OnServerInvoke.
 
-GML lives in ReplicatedStorage, so do not put secrets, data-store implementations, or private server logic in GML or its children. Keep those in server-only modules. Migrate in small steps, check for circular requires and duplicate lifecycle calls, and run the project's available checks or Roblox Studio tests. Do not add unrelated features or unnecessary code comments.
+GML lives in ReplicatedStorage, so do not put secrets, data-store implementations, or private server logic in GML or its children. Keep those in server-only modules. Do not install the optional webhook tracker unless I request it, and never put webhook URLs in source code. Migrate in small steps, check for circular requires and duplicate lifecycle calls, and run the project's available checks or Roblox Studio tests. Do not add unrelated features or unnecessary code comments.
 
 When finished, give me a short mapping from old locations to new locations, list any behavior or API changes, and report what you tested and what still needs manual Studio testing.
 ```
+
+## Optional webhook tracker
+
+The [webhook tracker](src/optional/WebhookTracker.luau) is a server-only add-on. It is intentionally absent from `default.project.json`, so installing GML does not start outbound tracking. To enable it, copy the file as a ModuleScript to `ServerStorage.Modules.Client.WebhookTracker` or map that location to `src/optional/WebhookTracker.luau` in your own Rojo project. The server bootstrap will call its `Init` and `Start` lifecycle methods.
+
+Create one new webhook URL and store the **full URL** in your experience's [Roblox secrets store](https://create.roblox.com/docs/cloud-services/secrets) as `GML_WEBHOOK_URL`, scoped to the endpoint's domain. Enable **Allow HTTP Requests**. Configure a local secret separately for Studio playtesting. Never paste the URL into a ModuleScript or commit it to Git. Rotate any webhook URL that has been shared publicly.
+
+Edit `WebhookTracker.Config` before syncing to customize its display name, group ID, polling interval, optional friend counts, and optional providers for country, visits, or a public thumbnail URL. `GroupId = 0` disables group checks. The module sends join, leave, group-join, and verified game-pass events. Its embeds include player names, user IDs, profile links, and session data; the configured endpoint receives that data. It uses one secret endpoint, a bounded send queue, retry delays, and no mention pings. It does not fetch from third-party Roblox proxies or send chat text. Legacy chat counts can be enabled; for a custom or modern chat system, call `WebhookTracker.RecordChat(player)` from your trusted server-side chat code if you need counts. If the endpoint rejects direct HTTP requests, use an HTTPS relay you control and store that relay URL as the secret.
+
+The tracker does **not** assign `MarketplaceService.ProcessReceipt` or grant purchases. In your existing receipt handler, after the product has been granted and recorded, call `WebhookTracker.ProductPurchased(receiptInfo)` before returning `PurchaseGranted`:
+
+```luau
+local WebhookTracker = require(game:GetService("ServerStorage").Modules.Client.WebhookTracker)
+
+if Decision == Enum.ProductPurchaseDecision.PurchaseGranted then
+	WebhookTracker.ProductPurchased(ReceiptInfo)
+end
+return Decision
+```
+
+`Decision` and `ReceiptInfo` here are the values from your existing handler; keep its grant and duplicate-receipt logic. The notification is queued separately and must never determine whether Roblox considers a purchase granted. Roblox documents `ProcessReceipt` as the [developer-product fulfillment callback](https://create.roblox.com/docs/reference/engine/classes/MarketplaceService). The tracker deduplicates notification calls by `PurchaseId` within one server session, so persistent cross-server deduplication remains the responsibility of the game's purchase system.
+
+The tracker also exposes `SetTotalSpent(player, robux)` and `SetTotalPlaytime(player, seconds)` for games that maintain those totals, plus `:Destroy()` to disconnect its listeners. If no secret is available, the add-on warns and stays inactive. A webhook endpoint can reject or rate-limit requests, so notifications are best-effort and do not replace gameplay data or purchase records.
 
 ## License
 
