@@ -48,7 +48,7 @@ function Cleanup:Clean()
 		self.Items[Index] = nil
 		local Success, Result = pcall(Dispose, Entry.Item, Entry.Method)
 		if not Success then
-			warn("[GML.Cleanup] " .. tostring(Result))
+			warn("[GMLK.Cleanup] " .. tostring(Result))
 		end
 	end
 end

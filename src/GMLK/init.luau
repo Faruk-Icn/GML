@@ -1,22 +1,22 @@
 local RunService = game:GetService("RunService")
 
-local GML = {}
-GML.__index = GML
+local GMLK = {}
+GMLK.__index = GMLK
 
-GML.Number = require(script.Number)
-GML.Time = require(script.Time)
-GML.Math = require(script.Math)
-GML.Table = require(script.Table)
-GML.Signal = require(script.Signal)
-GML.RateLimiter = require(script.RateLimiter)
-GML.RemoteGuard = require(script.RemoteGuard)
-GML.Cleanup = require(script.Cleanup)
-GML.StateMachine = require(script.StateMachine)
-GML.ObjectPool = require(script.ObjectPool)
-GML.Timer = require(script.Timer)
-GML.AttributeObserver = require(script.AttributeObserver)
-GML.WeightedRandom = require(script.WeightedRandom)
-GML.Tween = require(script.Tween)
+GMLK.Number = require(script.Number)
+GMLK.Time = require(script.Time)
+GMLK.Math = require(script.Math)
+GMLK.Table = require(script.Table)
+GMLK.Signal = require(script.Signal)
+GMLK.RateLimiter = require(script.RateLimiter)
+GMLK.RemoteGuard = require(script.RemoteGuard)
+GMLK.Cleanup = require(script.Cleanup)
+GMLK.StateMachine = require(script.StateMachine)
+GMLK.ObjectPool = require(script.ObjectPool)
+GMLK.Timer = require(script.Timer)
+GMLK.AttributeObserver = require(script.AttributeObserver)
+GMLK.WeightedRandom = require(script.WeightedRandom)
+GMLK.Tween = require(script.Tween)
 
 export type LoaderOptions = { IncludeDescendants: boolean?, Debug: boolean? }
 export type ModuleRecord = { Identifier: string, Name: string, Priority: number, Value: any }
@@ -35,9 +35,9 @@ local function GetModuleScript(Item: Instance): ModuleScript?
 	return nil
 end
 
-function GML.New(LoaderName: string?)
-	local Self = setmetatable({}, GML)
-	Self.LoaderName = LoaderName or "GML"
+function GMLK.New(LoaderName: string?)
+	local Self = setmetatable({}, GMLK)
+	Self.LoaderName = LoaderName or "GMLK"
 	Self.LoadedModules = {}
 	Self.LoadOrder = {}
 	Self.Errors = {}
@@ -46,7 +46,7 @@ function GML.New(LoaderName: string?)
 	return Self
 end
 
-function GML:RunLifecycle(Record: ModuleRecord, LifecycleName: string, Debug: boolean): boolean
+function GMLK:RunLifecycle(Record: ModuleRecord, LifecycleName: string, Debug: boolean): boolean
 	if type(Record.Value) ~= "table" then
 		return true
 	end
@@ -66,8 +66,8 @@ function GML:RunLifecycle(Record: ModuleRecord, LifecycleName: string, Debug: bo
 	return Success
 end
 
-function GML:LoadModules(Parent: Instance | { Instance }, Options: LoaderOptions?)
-	assert(not self.IsLoading, "GML is already loading modules")
+function GMLK:LoadModules(Parent: Instance | { Instance }, Options: LoaderOptions?)
+	assert(not self.IsLoading, "GMLK is already loading modules")
 	Options = Options or {}
 	local Debug = Options.Debug == true
 	local Items: { Instance }
@@ -127,12 +127,12 @@ function GML:LoadModules(Parent: Instance | { Instance }, Options: LoaderOptions
 	return self.LoadedModules
 end
 
-function GML:GetModule(Identifier: string): any
+function GMLK:GetModule(Identifier: string): any
 	local Record = self.LoadedModules[Identifier]
 	return if Record then Record.Value else nil
 end
 
-function GML:GetModuleByName(ModuleName: string): any
+function GMLK:GetModuleByName(ModuleName: string): any
 	for _, Record in ipairs(self.LoadOrder) do
 		if Record.Name == ModuleName then
 			return Record.Value
@@ -141,4 +141,4 @@ function GML:GetModuleByName(ModuleName: string): any
 	return nil
 end
 
-return GML
+return GMLK

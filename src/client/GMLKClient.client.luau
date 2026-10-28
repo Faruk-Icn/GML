@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Modules = ReplicatedStorage:WaitForChild("Modules")
-local GML = require(Modules:WaitForChild("Library"):WaitForChild("GML"))
+local GMLK = require(Modules:WaitForChild("Library"):WaitForChild("GMLK"))
 local ClientModules = Modules:WaitForChild("Client")
 
-local Loader = GML.New("Client")
+local Loader = GMLK.New("Client")
 Loader:LoadModules(ClientModules, { IncludeDescendants = true })

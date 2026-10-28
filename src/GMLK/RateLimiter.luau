@@ -104,7 +104,7 @@ function RateLimiter:BindFunction(Remote: RemoteFunction, Handler: (Player, ...a
 	assert(RunService:IsServer(), "BindFunction can only be called on the server")
 	assert(typeof(Remote) == "Instance" and Remote:IsA("RemoteFunction"), "Remote must be a RemoteFunction")
 	assert(type(Handler) == "function", "Handler must be a function")
-	assert(BoundFunctions[Remote] == nil, "RemoteFunction is already bound by GML")
+	assert(BoundFunctions[Remote] == nil, "RemoteFunction is already bound by GMLK")
 	local function Invoke(Player, ...)
 		local Allowed, RetryAfter = self:Allow(Player.UserId)
 		if not Allowed then
