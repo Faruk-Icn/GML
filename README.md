@@ -193,6 +193,26 @@ Tweens:Play(script.Parent:WaitForChild("Frame"), TweenInfo.new(0.25), { Backgrou
 
 `Number.Abbreviate` uses `K`, `M`, `B`, `T`, `Qa`, `Qi`, `Sx`, `Sp`, `Oc`, `No`, and `Dc`. `Number.ParseAbbreviated` accepts these exact suffixes and returns `nil` for invalid input. Decimal places for `Abbreviate` and `Commas` are limited to 0–6. `Time.FormatTimestamp` accepts Roblox `DateTime` format patterns and uses UTC unless the third argument is `true`. `Time.Relative` uses approximate 30-day months and 365-day years. `Signal:Wait()` yields until the next fire and returns its arguments; destroying the signal resumes waiters with no values.
 
+## Migrate an existing game with AI
+
+Copy and paste this prompt into an AI coding assistant that has access to your Roblox project or Rojo repository:
+
+```text
+Migrate the Roblox project I have opened or attached to GML: https://github.com/Faruk-Icn/GML. Read GML's current README and source before editing. If you cannot access my project, ask me for the files or repository instead of guessing its structure.
+
+First inspect my existing scripts, modules, startup order, require paths, remotes, and any Rojo project file. Identify which code runs on the client, which runs on the server, and which modules are shared. Preserve the game's behavior and existing public APIs. Reuse or adapt working systems instead of replacing them just to use a GML utility.
+
+Install GML at ReplicatedStorage.Modules.Library.GML, with its utility ModuleScripts as children. Use one client bootstrap at StarterPlayer.StarterPlayerScripts.GMLClient to load ReplicatedStorage.Modules.Client. Use one server bootstrap at ServerScriptService.GMLServer to load ServerStorage.Modules.Client. The server folder really is named Client in this framework. Update the Rojo mapping if this project uses Rojo; otherwise give me exact Roblox Studio placement steps.
+
+Move or adapt startup modules into the appropriate client or server folder. GML requires all discovered modules, runs every Init in priority order, then every Start in priority order. Set Priority only where existing dependencies require it. Keep dependency-only ModuleScripts out of the auto-loaded folders unless loading them is intentional. Update require paths and remove redundant startup scripts only after their callers and behavior have been accounted for.
+
+Keep existing RemoteEvent and RemoteFunction names, locations, arguments, and responses unless a change is necessary and you explain it. For server handlers that need throttling, create a limiter with GML.RateLimiter.New(...) and bind it with limiter:BindEvent(...) or limiter:BindFunction(...). Use GML.RemoteGuard for argument checks, and keep permission and game-state checks on the server. Do not leave a second unrestricted OnServerEvent listener performing the same protected action. Be careful that BindFunction assigns OnServerInvoke.
+
+GML lives in ReplicatedStorage, so do not put secrets, data-store implementations, or private server logic in GML or its children. Keep those in server-only modules. Migrate in small steps, check for circular requires and duplicate lifecycle calls, and run the project's available checks or Roblox Studio tests. Do not add unrelated features or unnecessary code comments.
+
+When finished, give me a short mapping from old locations to new locations, list any behavior or API changes, and report what you tested and what still needs manual Studio testing.
+```
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
