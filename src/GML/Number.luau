@@ -8,7 +8,7 @@ for Index, Suffix in ipairs(Suffixes) do
 end
 
 function Number.Abbreviate(Value: number, DecimalPlaces: number?): string
-	assert(type(Value) == "number" and Value == Value, "Value must be a number")
+	assert(type(Value) == "number" and Value > -math.huge and Value < math.huge, "Value must be a finite number")
 	local Places = math.clamp(math.floor(DecimalPlaces or 1), 0, 6)
 	local Absolute = math.abs(Value)
 	local Index = 1
@@ -41,7 +41,7 @@ function Number.ParseAbbreviated(Text: string): number?
 end
 
 function Number.Commas(Value: number, DecimalPlaces: number?): string
-	assert(type(Value) == "number" and Value == Value, "Value must be a number")
+	assert(type(Value) == "number" and Value > -math.huge and Value < math.huge, "Value must be a finite number")
 	local Places = math.clamp(math.floor(DecimalPlaces or 0), 0, 6)
 	local Formatted = string.format("%." .. Places .. "f", math.abs(Value))
 	local Integer, Fraction = string.match(Formatted, "^(%d+)(.*)$")
