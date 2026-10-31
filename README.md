@@ -1,10 +1,10 @@
-# GMLK — Grumy's Module Loader Kit for Roblox
+# GMLK - Grumy's Module Loader Kit for Roblox
 
 **Stars appreciated ⭐**
 
 ![Starstruck achievement animation](https://githubachievements.com/cdn-cgi/image/width=1200/images/starstruck/1.gif)
 
-GMLK (Grumy's Module Loader Kit) is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, signal, remote, cleanup, state, pooling, timer, attribute, random, and tween utilities.
+GMLK is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, signal, remote, cleanup, state, pooling, timer, attribute, random, and tween utilities.
 
 ## Layout
 
