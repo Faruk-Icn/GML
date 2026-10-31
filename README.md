@@ -1,10 +1,29 @@
 # GMLK - Grumy's Module Loader Kit for Roblox
 
-**Stars appreciated ⭐**
+GMLK is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, signal, remote, cleanup, state, pooling, timer, attribute, random, and tween utilities.
+
+## Try it in 5 minutes
+
+1. Clone this repository and install [Rojo](https://rojo.space/).
+2. Open a new Roblox Studio place. From the repository root, run `rojo serve examples/coin-counter/default.project.json`.
+3. Connect the Rojo plugin in Studio, sync the project, and press **Play**.
+4. Click **Add coin** to see the client and server modules work together. Click quickly four times to see the server rate limit a remote request.
+
+The [coin counter example](examples/coin-counter) uses the same GMLK source as the main project. Its [project file](examples/coin-counter/default.project.json) shows where each script and module belongs.
+
+If GMLK helps your project, a GitHub star is appreciated ⭐
 
 ![Starstruck achievement animation](https://githubachievements.com/cdn-cgi/image/width=1200/images/starstruck/1.gif)
 
-GMLK is an open source Luau framework for loading Roblox modules through `Init` and `Start` hooks. It also includes number, timestamp, duration, math, table, signal, remote, cleanup, state, pooling, timer, attribute, random, and tween utilities.
+## When to use GMLK
+
+| Use GMLK when | Use plain `require` when |
+| --- | --- |
+| Several client or server modules need a shared `Init` then `Start` sequence. | You have a few independent modules with no startup order to coordinate. |
+| You want one bootstrap per side and a consistent folder layout. | Your current startup scripts are already simple and clear. |
+| You need the bundled remote guards, rate limiter, and utilities together. | You only need one utility and can import it directly. |
+
+GMLK does not replace Roblox's `require`; its loader uses `require` to load ModuleScripts. You can also use the utilities without creating a GMLK loader. Keep game-specific permission and purchase logic on the server.
 
 ## Layout
 

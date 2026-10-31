@@ -1,0 +1,39 @@
+{
+  "name": "GMLK Coin Counter",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Modules": {
+        "$className": "Folder",
+        "Library": {
+          "$className": "Folder",
+          "GMLK": { "$path": "../../src/GMLK" }
+        },
+        "Client": { "$path": "src/client" }
+      },
+      "Remotes": {
+        "$className": "Folder",
+        "AddCoin": { "$className": "RemoteFunction" }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "Modules": {
+        "$className": "Folder",
+        "Client": { "$path": "src/server" }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "GMLKClient": { "$path": "../../src/client/GMLKClient.client.luau" }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "GMLKServer": { "$path": "../../src/server/GMLKServer.server.luau" }
+    }
+  }
+}
