@@ -1,0 +1,26 @@
+name: Luau checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  luau:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Luau CLI
+        run: |
+          curl -fsSL https://github.com/luau-lang/luau/releases/download/0.745/luau-ubuntu.zip -o /tmp/luau.zip
+          unzip -q /tmp/luau.zip -d /tmp/luau
+      - name: Check Luau syntax
+        run: |
+          find src examples tests -name '*.luau' -print0 | xargs -0 /tmp/luau/luau-compile --null
+      - name: Run utility checks
+        run: /tmp/luau/luau tests/utilities.luau
+      - name: Build Rojo projects
+        run: |
+          curl -fsSL https://github.com/rojo-rbx/rojo/releases/download/v7.7.1/rojo-7.7.1-linux-x86_64.zip -o /tmp/rojo.zip
+          unzip -q /tmp/rojo.zip -d /tmp/rojo
+          /tmp/rojo/rojo build default.project.json -o /tmp/gmlk.rbxlx
+          /tmp/rojo/rojo build examples/coin-counter/default.project.json -o /tmp/gmlk-example.rbxlx
